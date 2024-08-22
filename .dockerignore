@@ -1,0 +1,7 @@
+# すべてを無視する
+**
+
+# ただし、以下は許可する
+!index.ts
+!package.*json
+!prisma/**
