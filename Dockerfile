@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/nodejs:18 as builder
+FROM public.ecr.aws/lambda/nodejs:20-x86_64 as builder
 WORKDIR /usr/app
 COPY package.json index.ts  ./
 RUN npm install
