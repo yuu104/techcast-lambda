@@ -1,0 +1,11 @@
+services:
+  app-builder:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - type: bind
+        source: .
+        target: /usr/app
+    env_file:
+      - .env
