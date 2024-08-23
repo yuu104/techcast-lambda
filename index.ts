@@ -1,22 +1,26 @@
 import { Context, APIGatewayProxyResult, APIGatewayEvent } from "aws-lambda";
-import { SecretsManager } from "aws-sdk";
+import {
+  GetSecretValueCommand,
+  SecretsManagerClient,
+} from "@aws-sdk/client-secrets-manager";
 import mysql from "mysql2/promise";
 
 type DbSecret = {
   username: string;
   password: string;
-  host: string;
-  port: number;
 };
 
-const secretsManager = new SecretsManager();
-
 const getDbSecret = async (secretId: string): Promise<DbSecret> => {
-  const data = await secretsManager
-    .getSecretValue({ SecretId: secretId })
-    .promise();
-  if (data.SecretString) {
-    return JSON.parse(data.SecretString);
+  const client = new SecretsManagerClient();
+  const response = await client.send(
+    new GetSecretValueCommand({
+      SecretId: secretId,
+    })
+  );
+  if (response.SecretString) {
+    console.log("シークレット文字列");
+    console.log(response.SecretString);
+    return JSON.parse(response.SecretString);
   }
   throw new Error("Secret not found");
 };
@@ -26,6 +30,8 @@ export const handler = async (
   context: Context
 ): Promise<APIGatewayProxyResult> => {
   const secretId = process.env.DB_SECRET_ID;
+  const rdsHost = process.env.DB_HOST;
+  const rdsPort = Number(process.env.DB_PORT);
   const newDbName = process.env.NEW_DB_NAME || "my_new_database";
 
   if (!secretId) {
@@ -36,22 +42,23 @@ export const handler = async (
       }),
     };
   }
+  console.log("シークレットID");
+  console.log(secretId);
 
   try {
-    const { host, username, password, port } = await getDbSecret(secretId);
+    const { username, password } = await getDbSecret(secretId);
     const pool = mysql.createPool({
-      host,
+      host: rdsHost,
       user: username,
       password,
+      port: rdsPort,
       connectionLimit: 3,
     });
 
-    await pool.query(`CREATE DATABASE IF NOT EXISTS ${newDbName}`);
+    const databases = await pool.query(`SHOW DATABASES`);
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        message: `Database ${newDbName} created successfully`,
-      }),
+      body: JSON.stringify(databases[0]),
     };
   } catch (error) {
     return {

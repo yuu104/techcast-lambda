@@ -1,29 +1,11 @@
 ###############
 #    base     #
 ###############
-FROM node:20
+FROM node:18
+
+# zipをインストール
+RUN apt-get update && apt-get install -y zip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/app
-
-
-# ###############
-# #    build    #
-# ###############
-# FROM base as builder
-
-# COPY . .
-
-# RUN npm install
-
-# RUN npm run build
-
-# ###############
-# #    prod     #
-# ###############
-# FROM public.ecr.aws/lambda/nodejs:18 as prod
-
-# WORKDIR ${LAMBDA_TASK_ROOT}
-
-# COPY --from=builder /usr/app/dist/* ./
-
-# CMD ["index.handler"]

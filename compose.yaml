@@ -6,15 +6,3 @@ services:
       - type: bind
         source: .
         target: /usr/app
-    env_file:
-      - .env
-
-  # app-builder:
-  #   build:
-  #     context: .
-  #     target: builder
-
-  # app-prod:
-  #   build:
-  #     context: .
-  #     target: prod
