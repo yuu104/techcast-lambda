@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "prebuild": "rm -rf dist",
-    "build": "esbuild index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
+    "build": "esbuild src/getArticleBody.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
     "postbuild": "cd dist && zip -r index.zip index.js*"
   },
   "author": "",
@@ -17,8 +17,12 @@
     "esbuild": "^0.23.1"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.637.0",
+    "@aws-sdk/client-lambda": "^3.637.0",
+    "@aws-sdk/client-polly": "^3.637.0",
     "@aws-sdk/client-secrets-manager": "^3.637.0",
-    "mysql2": "^3.11.0"
+    "mysql2": "^3.11.0",
+    "uuid": "^10.0.0"
   },
   "volta": {
     "node": "20.12.0"
