@@ -6,7 +6,7 @@ import {
 
 export const handler = async (
   event: GenerateScriptResponseData
-): Promise<void> => {
+): Promise<any> => {
   const pollyClient = new PollyClient({ region: process.env.REGION });
   const command = new StartSpeechSynthesisTaskCommand({
     Engine: "standard",
@@ -18,8 +18,9 @@ export const handler = async (
   });
 
   try {
-    await pollyClient.send(command);
+    const response = await pollyClient.send(command);
+    return response;
   } catch (e) {
-    throw e;
+    return { e };
   }
 };
