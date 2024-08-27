@@ -1,7 +1,7 @@
 import { GetArticleBodyResponseData, GetRssResponseData } from "../model/Batch";
 import { invokeLambda } from "../utils/invokeLambda";
 
-const readerApiEndpoint = "https://r.jina.ai/https://example.com";
+const readerApiEndpoint = "https://r.jina.ai";
 
 export const handler = async (event: GetRssResponseData): Promise<any> => {
   try {
@@ -17,13 +17,11 @@ export const handler = async (event: GetRssResponseData): Promise<any> => {
       content: responseData.data.content as string,
     };
 
-    return rssDataWithContent;
-
-    // await invokeLambda(
-    //   process.env.GENERATE_SCRIPT_LAMBDA_ARN!,
-    //   "RequestResponse",
-    //   JSON.stringify(rssDataWithContent)
-    // );
+    await invokeLambda(
+      process.env.GENERATE_SCRIPT_LAMBDA_ARN!,
+      "RequestResponse",
+      JSON.stringify(rssDataWithContent)
+    );
   } catch (e) {
     throw e;
   }
