@@ -1,4 +1,3 @@
-import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { invokeLambda } from "../utils/invokeLambda";
 import { GetRssResponseData } from "../model/Batch";
 
@@ -36,22 +35,17 @@ export const handler = async () => {
         .map((data, index) => ({
           title: data.items[0].title, // assuming 'items' is an array
           site_url: data.items[0].link,
-          thubnail_url:
+          thumbnail_url:
             data.items[0].thumbnail ?? data.items[0].enclosure?.link,
           category_id: allUrls[index].category_id,
         }))
     );
 
-    const response = await invokeLambda(
+    await invokeLambda(
       process.env.DUPLICATE_LAMBDA_ARN!,
       "RequestResponse",
       JSON.stringify(rssData)
     );
-
-    return {
-      statusCode: 200,
-      body: JSON.parse(Buffer.from(response.Payload!).toString()),
-    };
   } catch (e) {
     return {
       statusCode: 500,
