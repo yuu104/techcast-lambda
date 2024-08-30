@@ -2,20 +2,37 @@ import mysql from "mysql2/promise";
 import { Podcast } from "../model/Podcast";
 import { getConnectionPool } from "../utils/getConnectionPool";
 import { GetRssResponseData } from "../model/Batch";
+import { SendMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
 
-export const handler = async (
-  event: GetRssResponseData[]
-): Promise<GetRssResponseData[]> => {
+export const handler = async (event: GetRssResponseData[]): Promise<void> => {
   try {
     const pool = await getConnectionPool();
     const filteredPodcasts = await filterOutExistingLinksInDatabase(
       removeDuplicateLinksFromEvent(event),
       pool
     );
-    return filteredPodcasts;
+
+    await sendMessagesToSqs(filteredPodcasts);
   } catch (error) {
-    throw error;
+    return error;
   }
+};
+
+const sendMessagesToSqs = async (messages: GetRssResponseData[]) => {
+  const sqsClient = new SQSClient({
+    region: process.env.REGION,
+  });
+
+  await Promise.all(
+    messages.map((message) =>
+      sqsClient.send(
+        new SendMessageCommand({
+          QueueUrl: process.env.SQS_QUEUE_URL,
+          MessageBody: JSON.stringify(message),
+        })
+      )
+    )
+  );
 };
 
 const removeDuplicateLinksFromEvent = (

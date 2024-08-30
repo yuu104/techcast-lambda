@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "prebuild": "rm -rf dist",
-    "build": "esbuild src/getArticleBody.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
+    "build": "esbuild src/generateScript.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
     "postbuild": "cd dist && zip -r index.zip index.js*"
   },
   "author": "",
@@ -21,7 +21,9 @@
     "@aws-sdk/client-lambda": "^3.637.0",
     "@aws-sdk/client-polly": "^3.637.0",
     "@aws-sdk/client-secrets-manager": "^3.637.0",
+    "@aws-sdk/client-sqs": "^3.637.0",
     "mysql2": "^3.11.0",
+    "ts-node": "^10.9.2",
     "uuid": "^10.0.0"
   },
   "volta": {

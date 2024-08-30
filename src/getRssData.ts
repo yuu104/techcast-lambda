@@ -1,15 +1,14 @@
 import { invokeLambda } from "../utils/invokeLambda";
-import { GetRssResponseData } from "../model/Batch";
 
 type RssResponse = {
   status: "ok" | "error";
-  items: RssResponseData;
+  items: RssResponseData[];
 };
 
 type RssResponseData = {
   title: string;
   link: string;
-  thubnail: string;
+  thumbnail: string;
   enclosure: {
     link: string;
   };
@@ -18,39 +17,42 @@ type RssResponseData = {
 const rssToJdonApiEndpont = "https://api.rss2json.com/v1/api.json";
 
 export const handler = async () => {
-  const rssData: GetRssResponseData[] = [];
   const allUrls = rssUrls.flatMap((rssUrl) =>
     rssUrl.urls.map((url) => ({ url, category_id: rssUrl.category_id }))
   );
   try {
-    const responses = await Promise.all(
-      allUrls.map(({ url }) => fetch(`${rssToJdonApiEndpont}?rss_url=${url}`))
+    const fetchRss = async (
+      url: string,
+      category_id: string
+    ): Promise<RssResponse & { category_id: string }> => {
+      const res = await fetch(`${rssToJdonApiEndpont}?rss_url=${url}`);
+      const data = await res.json();
+      return { ...(data as RssResponse), category_id };
+    };
+    const rssResponseData = await Promise.all(
+      allUrls.map((item) => fetchRss(item.url, item.category_id))
     );
-    const jsonData: RssResponse[] = await Promise.all(
-      responses.map((response) => response.json())
-    );
-    rssData.push(
-      ...jsonData
-        .filter((data) => data.status === "ok")
-        .map((data, index) => ({
-          title: data.items[0].title, // assuming 'items' is an array
-          site_url: data.items[0].link,
-          thumbnail_url:
-            data.items[0].thumbnail ?? data.items[0].enclosure?.link,
-          category_id: allUrls[index].category_id,
+
+    const rssData = rssResponseData
+      .filter((data) => data.status === "ok")
+      .flatMap((data) =>
+        data.items.map((item) => ({
+          title: item.title,
+          site_url: item.link,
+          thumbnail_url: item.thumbnail ?? item.enclosure?.link,
+          category_id: data.category_id,
         }))
-    );
+      );
 
     await invokeLambda(
       process.env.DUPLICATE_LAMBDA_ARN!,
-      "RequestResponse",
+      "Event",
       JSON.stringify(rssData)
     );
   } catch (e) {
     return {
       statusCode: 500,
       error: e,
-      message: rssData,
     };
   }
 };
@@ -86,3 +88,5 @@ const rssUrls: { category_id: string; urls: string[] }[] = [
     urls: ["https://findy-code.io/engineer-lab/rss"],
   },
 ];
+
+handler().catch((e) => console.error(e));
